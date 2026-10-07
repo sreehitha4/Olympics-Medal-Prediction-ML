@@ -29,10 +29,10 @@ from sklearn.metrics import (
 
 
 def main():
-
-    # Load and split data
+    # Load processed dataset
     data = load_data()
 
+    # Create chronological train-validation-test split
     train_data, validation_data, test_data = create_temporal_split(data)
 
     # Prepare features and targets
@@ -52,7 +52,7 @@ def main():
         test_data
     )
 
-    # Scale features
+    # Scale features using training data only
     (
         X_train_scaled,
         X_val_scaled,
@@ -64,9 +64,9 @@ def main():
         X_test
     )
 
-    # -------------------------
+    # ---------------------------------------------------------
     # Classification
-    # -------------------------
+    # ---------------------------------------------------------
 
     classifiers = train_classifiers(
         X_train_scaled,
@@ -87,9 +87,9 @@ def main():
 
     best_classifier = classifiers[best_classifier_name]
 
-    # -------------------------
+    # ---------------------------------------------------------
     # Regression
-    # -------------------------
+    # ---------------------------------------------------------
 
     regressors = train_regressors(
         X_train_scaled,
@@ -110,9 +110,9 @@ def main():
 
     best_regressor = regressors[best_regressor_name]
 
-    # -------------------------
-    # Final 2016 evaluation
-    # -------------------------
+    # ---------------------------------------------------------
+    # Final 2016 test evaluation
+    # ---------------------------------------------------------
 
     classification_test_results = evaluate_classifier(
         best_classifier,
@@ -126,9 +126,9 @@ def main():
         y_test_reg
     )
 
-    # -------------------------
+    # ---------------------------------------------------------
     # Two-stage prediction
-    # -------------------------
+    # ---------------------------------------------------------
 
     two_stage_results = generate_two_stage_predictions(
         best_classifier,
@@ -138,28 +138,30 @@ def main():
         test_data
     )
 
-    final_predictions = two_stage_results[
-        "Final_Medal_Prediction"
-    ]
+    final_predictions = (
+        two_stage_results["Final_Medal_Prediction"]
+    )
 
     two_stage_mae = mean_absolute_error(
         y_test_reg,
         final_predictions
     )
 
-    two_stage_rmse = mean_squared_error(
-        y_test_reg,
-        final_predictions
-    ) ** 0.5
+    two_stage_rmse = (
+        mean_squared_error(
+            y_test_reg,
+            final_predictions
+        ) ** 0.5
+    )
 
     two_stage_r2 = r2_score(
         y_test_reg,
         final_predictions
     )
 
-    # -------------------------
+    # ---------------------------------------------------------
     # Display results
-    # -------------------------
+    # ---------------------------------------------------------
 
     print("\n===== Olympics Medal Prediction =====")
 
@@ -206,15 +208,24 @@ def main():
     print("RMSE:", round(two_stage_rmse, 4))
     print("R2:", round(two_stage_r2, 4))
 
-    # -------------------------
-    # Save final metrics
-    # -------------------------
+    # ---------------------------------------------------------
+    # Save results
+    # ---------------------------------------------------------
 
     import os
     import pandas as pd
 
-    os.makedirs("results/metrics", exist_ok=True)
+    os.makedirs(
+        "results/metrics",
+        exist_ok=True
+    )
 
+    os.makedirs(
+        "results/predictions",
+        exist_ok=True
+    )
+
+    # Final metrics table
     final_metrics = pd.DataFrame([
         {
             "Model": "Logistic Regression",
@@ -256,8 +267,21 @@ def main():
         index=False
     )
 
+    # Save country-level 2016 predictions
+    two_stage_results.to_csv(
+        "results/predictions/2016_predictions.csv",
+        index=False
+    )
+
     print("\nFinal metrics saved to:")
-    print("results/metrics/final_results_2016.csv")
+    print(
+        "results/metrics/final_results_2016.csv"
+    )
+
+    print("\n2016 predictions saved to:")
+    print(
+        "results/predictions/2016_predictions.csv"
+    )
 
     print("\nPipeline completed successfully.")
 
